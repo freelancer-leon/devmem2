@@ -29,3 +29,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program, in the file COPYING.
 ```
+
+To use `/dev/mem` to view and modify regular RAM on kernel v4.9, you must fist:
+- disable `CONFIG_STRICT_DEVMEM`
+- pass the `nopat` kernel command line option for x86
+
+IO ports still work without those.
