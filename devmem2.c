@@ -49,7 +49,7 @@ void show_usage(char *program)
 {
 	fprintf(stderr, "\nUsage:\t%s { address } [ type [ data ] ]\n"
 		"\taddress : memory address to act upon\n"
-		"\ttype    : access operation type : [b]yte, [h]alfword, [w]ord\n"
+		"\ttype    : access operation type : [b]yte, [h]alfword, [w]ord, [l]ong\n"
 		"\tdata    : data to be written\n\n",
 		program);
 		exit(1);
@@ -71,7 +71,8 @@ int main(int argc, char **argv)
 	if (argc > 2)
 		access_type = tolower(argv[2][0]);
 
-	if ((fd = open("/dev/mem", argv[3] ? (O_RDWR | O_SYNC) : (O_RDONLY | O_SYNC))) == -1) FATAL;
+	if ((fd = open("/dev/mem", argv[3] ? (O_RDWR | O_SYNC) : (O_RDONLY | O_SYNC)))
+		 == -1) FATAL;
 	printf("/dev/mem opened.\n");
 	fflush(stdout);
 
@@ -92,6 +93,9 @@ int main(int argc, char **argv)
 			read_result = *((unsigned short *) virt_addr);
 			break;
 		case 'w':
+			read_result = *((unsigned int *) virt_addr);
+			break;
+		case 'l':
 			read_result = *((unsigned long *) virt_addr);
 			break;
 		default:
@@ -113,9 +117,12 @@ int main(int argc, char **argv)
 				read_result = *((unsigned short *) virt_addr);
 				break;
 			case 'w':
+				*((unsigned int *) virt_addr) = writeval;
+				read_result = *((unsigned int *) virt_addr);
+				break;
+			case 'l':
 				*((unsigned long *) virt_addr) = writeval;
 				read_result = *((unsigned long *) virt_addr);
-				break;
 		}
 		printf("Written 0x%X; readback 0x%X\n", writeval, read_result);
 		fflush(stdout);
