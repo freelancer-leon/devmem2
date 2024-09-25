@@ -55,6 +55,31 @@ void show_usage(char *program)
 		exit(1);
 }
 
+unsigned long read_mem(int access_type, void *virt_addr)
+{
+	unsigned long read_result = 0;
+
+	switch (access_type) {
+		case 'b':
+			read_result = *((unsigned char *) virt_addr);
+			break;
+		case 'h':
+			read_result = *((unsigned short *) virt_addr);
+			break;
+		case 'w':
+			read_result = *((unsigned int *) virt_addr);
+			break;
+		case 'l':
+			read_result = *((unsigned long *) virt_addr);
+			break;
+		default:
+			fprintf(stderr, "Illegal data type '%c'.\n", access_type);
+			exit(2);
+	}
+
+	return read_result;
+}
+
 int main(int argc, char **argv)
 {
 	int fd;
@@ -85,23 +110,7 @@ int main(int argc, char **argv)
 	fflush(stdout);
 
 	virt_addr = map_base + (target & MAP_MASK);
-	switch (access_type) {
-		case 'b':
-			read_result = *((unsigned char *) virt_addr);
-			break;
-		case 'h':
-			read_result = *((unsigned short *) virt_addr);
-			break;
-		case 'w':
-			read_result = *((unsigned int *) virt_addr);
-			break;
-		case 'l':
-			read_result = *((unsigned long *) virt_addr);
-			break;
-		default:
-			fprintf(stderr, "Illegal data type '%c'.\n", access_type);
-			exit(2);
-	}
+	read_result = read_mem(access_type, virt_addr);
 	printf("Value at address 0x%lX (%p): 0x%lX\n", target, virt_addr, read_result);
 	fflush(stdout);
 
@@ -110,21 +119,20 @@ int main(int argc, char **argv)
 		switch (access_type) {
 			case 'b':
 				*((unsigned char *) virt_addr) = writeval;
-				read_result = *((unsigned char *) virt_addr);
 				break;
 			case 'h':
 				*((unsigned short *) virt_addr) = writeval;
-				read_result = *((unsigned short *) virt_addr);
 				break;
 			case 'w':
 				*((unsigned int *) virt_addr) = writeval;
-				read_result = *((unsigned int *) virt_addr);
 				break;
 			case 'l':
 				*((unsigned long *) virt_addr) = writeval;
-				read_result = *((unsigned long *) virt_addr);
 		}
-		printf("Written 0x%lX; readback 0x%lX\n", writeval, read_result);
+		printf("Written 0x%lX\n", writeval);
+		fflush(stdout);
+		read_result = read_mem(access_type, virt_addr);
+		printf("Readback 0x%lX\n", read_result);
 		fflush(stdout);
 	}
 
