@@ -95,9 +95,9 @@ int main(int argc, char **argv)
 
 	if (argc > 2)
 		access_type = tolower(argv[2][0]);
-
+	/* partial read/write */
 	if ((fd = open("/dev/mem", argv[3] ? (O_RDWR | O_SYNC) : (O_RDONLY | O_SYNC)))
-		 == -1) FATAL;
+		== -1) FATAL;
 	printf("/dev/mem opened.\n");
 	fflush(stdout);
 
@@ -110,10 +110,15 @@ int main(int argc, char **argv)
 	fflush(stdout);
 
 	virt_addr = map_base + (target & MAP_MASK);
-	read_result = read_mem(access_type, virt_addr);
-	printf("Value at address 0x%lX (%p): 0x%lX\n", target, virt_addr, read_result);
-	fflush(stdout);
 
+	/* Read memory, write memory will run into it */
+	if (argc <= 3) {
+		read_result = read_mem(access_type, virt_addr);
+		printf("Value at address 0x%lX (%p): 0x%lX\n", target, virt_addr, read_result);
+		fflush(stdout);
+	}
+
+	/* Write memory */
 	if (argc > 3) {
 		writeval = strtoul(argv[3], 0, 0);
 		switch (access_type) {
@@ -131,9 +136,12 @@ int main(int argc, char **argv)
 		}
 		printf("Written 0x%lX\n", writeval);
 		fflush(stdout);
+		/* don't read back */
+#if 0
 		read_result = read_mem(access_type, virt_addr);
 		printf("Readback 0x%lX\n", read_result);
 		fflush(stdout);
+#endif
 	}
 
 	if (munmap(map_base, MAP_SIZE) == -1) FATAL;
